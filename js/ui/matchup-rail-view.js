@@ -31,19 +31,7 @@ window.Kakoi = window.Kakoi || {};
     constructor(el, { onChoose, onShow, onHover }) {
       this.el = el;
       el.innerHTML =
-        `<section class="mu-side" data-side="me">
-          <h3 class="mu-h">自分<small>先手</small></h3>
-          <div class="seg wide" data-role="seg-me">
-            <button data-value="ibisha">居飛車</button><button data-value="furibisha">振り飛車</button>
-          </div>
-          <h4 class="mu-sub">囲い<label class="switch"><input type="checkbox" data-expand="castle"> ×を展開</label></h4>
-          <div class="mu-list fold" data-role="list-castle-me"></div>
-          <button class="mu-folded" type="button" data-expand="castle" hidden></button>
-          <h4 class="mu-sub">戦法<label class="switch"><input type="checkbox" data-expand="tactic"> ×を展開</label></h4>
-          <div class="mu-list fold" data-role="list-tactic-me"></div>
-          <button class="mu-folded" type="button" data-expand="tactic" hidden></button>
-        </section>
-        <section class="mu-side" data-side="opp">
+        `<section class="mu-side" data-side="opp">
           <h3 class="mu-h">相手<small>後手</small>
             <label class="switch"><input type="checkbox" data-show="opp"> 表示</label>
           </h3>
@@ -56,6 +44,18 @@ window.Kakoi = window.Kakoi || {};
             <p class="mu-status" data-role="opp-status"></p>
             <label class="switch"><input type="checkbox" data-show="threat"> 脅威の帯</label>
           </div>
+        </section>
+        <section class="mu-side" data-side="me">
+          <h3 class="mu-h">自分<small>先手</small></h3>
+          <div class="seg wide" data-role="seg-me">
+            <button data-value="ibisha">居飛車</button><button data-value="furibisha">振り飛車</button>
+          </div>
+          <h4 class="mu-sub">囲い<label class="switch"><input type="checkbox" data-expand="castle"> ×を展開</label></h4>
+          <div class="mu-list fold" data-role="list-castle-me"></div>
+          <button class="mu-folded" type="button" data-expand="castle" hidden></button>
+          <h4 class="mu-sub">戦法<label class="switch"><input type="checkbox" data-expand="tactic"> ×を展開</label></h4>
+          <div class="mu-list fold" data-role="list-tactic-me"></div>
+          <button class="mu-folded" type="button" data-expand="tactic" hidden></button>
         </section>`;
       this.els = {
         tMe: el.querySelector('[data-role="list-tactic-me"]'),

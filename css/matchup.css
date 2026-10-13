@@ -10,7 +10,7 @@ body[data-view="matchup"] .view-pane.pane-fill[data-view~="matchup"] {
 /* ===== 左: 自分／相手の選択 ===== */
 #matchupRail { padding:16px 18px; gap:14px; }
 /* .mu-side は pane-fill（縦flex）の子。flex の既定では縮んで中身が隣のセクションに
-   重なって見えるので、自分側だけ内部スクロールにし、相手側は縮めず下端に置く */
+   重なって見えるので、自分側だけ内部スクロールにし、相手側は縮めず上端に置く */
 .mu-side { display:flex; flex-direction:column; gap:8px; min-height:0; }
 .mu-side[data-side="me"] { flex:1 1 auto; overflow:auto; }
 .mu-side[data-side="opp"] { flex:none; }
