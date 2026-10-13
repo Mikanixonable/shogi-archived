@@ -19,9 +19,21 @@ body[data-view="matchup"] .view-pane.pane-fill[data-view~="matchup"] {
 .mu-h::after { content:""; flex:1; height:1px; background:var(--line); }
 .mu-h small { font-weight:400; letter-spacing:.1em; }
 .mu-h .switch { order:3; letter-spacing:.06em; }
-.mu-sub { margin:6px 0 0; font-size:11px; letter-spacing:.16em; color:var(--muted); font-weight:600; }
+.mu-sub { margin:6px 0 0; font-size:11px; letter-spacing:.16em; color:var(--muted); font-weight:600;
+          display:flex; align-items:center; }
 .mu-list { display:flex; flex-direction:column; gap:8px; }
 .mu-list .tr-row h3 { font-size:10.5px; }
+
+/* ×の収納: 見出し右のトグルで、両立しない（薄い表示の）行を縦に圧縮して収納する。
+   全員×の系統は見出しごと畳み、収納中は層の下端に件数の帯を出す（押すと展開に戻る） */
+.mu-sub .switch { margin-left:auto; letter-spacing:.08em; }
+.mu-sub .switch:has(input:disabled) { opacity:.45; }
+.mu-list.fold .mu-item[data-compat="ng"] { display:none; }
+.mu-list.fold .tr-row:not(:has(.mu-item:not([data-compat="ng"]))) { display:none; }
+.mu-folded { display:block; width:100%; margin:0; padding:3px 8px; border:1px dashed var(--line); background:none;
+             font-size:10.5px; letter-spacing:.08em; color:var(--muted); text-align:center; cursor:pointer; }
+.mu-folded:hover { color:var(--fg); border-color:var(--line-2); }
+.mu-folded[hidden] { display:none; }
 
 /* 相性バッジ: ◎ は朱の輪郭、× は薄く斜線（行は押せる）。○ は標準 */
 .mu-item { position:relative; }

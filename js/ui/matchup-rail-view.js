@@ -1,5 +1,6 @@
-// 対局図の左パネル: 「自分」の3層（戦略・戦法・囲い）を相性バッジつきの一覧で選び、
-// 「相手」の3層をコンパクトな選択肢で選ぶ。バッジは compat.judge の best/ok/ng（計画書 §6）
+// 対局図の左パネル: 「自分」の3層（戦略・囲い・戦法）を相性バッジつきの一覧で選び、
+// 「相手」の3層をコンパクトな選択肢で選ぶ。バッジは compat.judge の best/ok/ng（計画書 §6）。
+// ×の行（薄い表示）は見出しのトグルで縦にたたんで収納できる
 window.Kakoi = window.Kakoi || {};
 (() => {
   'use strict';
@@ -35,10 +36,12 @@ window.Kakoi = window.Kakoi || {};
           <div class="seg wide" data-role="seg-me">
             <button data-value="ibisha">居飛車</button><button data-value="furibisha">振り飛車</button>
           </div>
-          <h4 class="mu-sub">戦法</h4>
-          <div class="mu-list" data-role="list-tactic-me"></div>
-          <h4 class="mu-sub">囲い</h4>
+          <h4 class="mu-sub">囲い<label class="switch"><input type="checkbox" data-fold="castle"> ×を収納</label></h4>
           <div class="mu-list" data-role="list-castle-me"></div>
+          <button class="mu-folded" type="button" data-fold="castle" hidden></button>
+          <h4 class="mu-sub">戦法<label class="switch"><input type="checkbox" data-fold="tactic"> ×を収納</label></h4>
+          <div class="mu-list" data-role="list-tactic-me"></div>
+          <button class="mu-folded" type="button" data-fold="tactic" hidden></button>
         </section>
         <section class="mu-side" data-side="opp">
           <h3 class="mu-h">相手<small>後手</small>
@@ -48,8 +51,8 @@ window.Kakoi = window.Kakoi || {};
             <div class="seg small" data-role="seg-opp">
               <button data-value="ibisha">居飛車</button><button data-value="furibisha">振り飛車</button>
             </div>
-            <label class="mu-sel"><span>戦法</span><select data-layer="tactic"></select></label>
             <label class="mu-sel"><span>囲い</span><select data-layer="castle"></select></label>
+            <label class="mu-sel"><span>戦法</span><select data-layer="tactic"></select></label>
             <p class="mu-status" data-role="opp-status"></p>
             <label class="switch"><input type="checkbox" data-show="threat"> 脅威の帯</label>
           </div>
@@ -63,12 +66,18 @@ window.Kakoi = window.Kakoi || {};
         cOpp: el.querySelector('select[data-layer="castle"]'),
         swOpp: el.querySelector('[data-show="opp"]'),
         swThreat: el.querySelector('[data-show="threat"]'),
+        foldSw: { castle: el.querySelector('input[data-fold="castle"]'), tactic: el.querySelector('input[data-fold="tactic"]') },
+        foldNote: { castle: el.querySelector('.mu-folded[data-fold="castle"]'), tactic: el.querySelector('.mu-folded[data-fold="tactic"]') },
       };
+      // ×（両立しない・薄い表示の行）の収納状態。層ごとの開閉だけを持ち、行の相性は update に任せる
+      this.fold = { castle: false, tactic: false };
       this.seg = {
         me: new K.Segmented(el.querySelector('[data-role="seg-me"]'), v => onChoose('me', 'strategy', v)),
         opp: new K.Segmented(el.querySelector('[data-role="seg-opp"]'), v => onChoose('opp', 'strategy', v)),
       };
       el.addEventListener('click', e => {
+        const n = e.target.closest('.mu-folded');
+        if (n) { this._setFold(n.dataset.fold, false); return; }
         const b = e.target.closest('.mu-item');
         if (b) onChoose(b.dataset.side, b.dataset.layer, b.dataset.id);
       });
@@ -91,7 +100,9 @@ window.Kakoi = window.Kakoi || {};
         const sel = e.target.closest('select[data-layer]');
         if (sel) { onChoose('opp', sel.dataset.layer, sel.value); return; }
         const sw = e.target.closest('input[data-show]');
-        if (sw) onShow(sw.dataset.show, sw.checked);
+        if (sw) { onShow(sw.dataset.show, sw.checked); return; }
+        const fd = e.target.closest('input[data-fold]');
+        if (fd) this._setFold(fd.dataset.fold, fd.checked);
       });
 
       // 一覧の元データ: 戦法は周期表と同じ行（系統ごと・筋の順）、囲いは戦型ごとに系統順
@@ -170,9 +181,37 @@ window.Kakoi = window.Kakoi || {};
         r.mark.hidden = !MARK[j.level];
       }
 
+      // 相性の再判定で × の数が変わるので、収納の案内とトグルの可否をここで同期する。
+      // ×が無くなった層は開いた状態に戻す（畳んだまま不可視の状態を残さない）
+      for (const layer of ['castle', 'tactic']) {
+        const n = this._ngCount(layer);
+        if (n === 0 && this.fold[layer]) this._setFold(layer, false);
+        this._foldNote(layer, n);
+        this.els.foldSw[layer].disabled = n === 0;
+      }
+
       this._fillSelect(this.els.tOpp, 'tactic', opp, me, effTacticId(opp));
       this._fillSelect(this.els.cOpp, 'castle', opp, me, effCastleId(opp, me));
       this._status(m);
+    }
+
+    /** ×（両立しない）行の収納を開閉する。list に .fold を付けて CSS に任せ、下端の案内と同期する */
+    _setFold(layer, on) {
+      this.fold[layer] = on;
+      (layer === 'castle' ? this.els.cMe : this.els.tMe).classList.toggle('fold', on);
+      this.els.foldSw[layer].checked = on;
+      this._foldNote(layer, this._ngCount(layer));
+    }
+
+    _ngCount(layer) {
+      return this.meRows.reduce((n, r) => n + (r.layer === layer && r.el.dataset.compat === 'ng' ? 1 : 0), 0);
+    }
+
+    // 収納中は層の下端に「× n 件を収納」の帯を出す。押すと展開に戻る
+    _foldNote(layer, n) {
+      const el = this.els.foldNote[layer];
+      el.hidden = !(this.fold[layer] && n > 0);
+      el.textContent = `× ${n} 件を収納`;
     }
 
     // 相手の select: 戦型ごとの optgroup。各選択肢に compat.judge の印を付ける。
