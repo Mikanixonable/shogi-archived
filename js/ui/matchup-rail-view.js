@@ -1,6 +1,6 @@
 // 対局図の左パネル: 「自分」の3層（戦略・囲い・戦法）を相性バッジつきの一覧で選び、
 // 「相手」の3層をコンパクトな選択肢で選ぶ。バッジは compat.judge の best/ok/ng（計画書 §6）。
-// ×の行（薄い表示）は畳んで収納するのが標準。見出しの「×を展開」トグルで開く
+// ×の行（薄い表示）は常に畳んで非表示にし、件数だけ層の下端に示す
 window.Kakoi = window.Kakoi || {};
 (() => {
   'use strict';
@@ -50,12 +50,12 @@ window.Kakoi = window.Kakoi || {};
           <div class="seg wide" data-role="seg-me">
             <button data-value="ibisha">居飛車</button><button data-value="furibisha">振り飛車</button>
           </div>
-          <h4 class="mu-sub">囲い<label class="switch"><input type="checkbox" data-expand="castle"> ×を展開</label></h4>
+          <h4 class="mu-sub">囲い</h4>
           <div class="mu-list fold" data-role="list-castle-me"></div>
-          <button class="mu-folded" type="button" data-expand="castle" hidden></button>
-          <h4 class="mu-sub">戦法<label class="switch"><input type="checkbox" data-expand="tactic"> ×を展開</label></h4>
+          <div class="mu-folded" data-note="castle" hidden></div>
+          <h4 class="mu-sub">戦法</h4>
           <div class="mu-list fold" data-role="list-tactic-me"></div>
-          <button class="mu-folded" type="button" data-expand="tactic" hidden></button>
+          <div class="mu-folded" data-note="tactic" hidden></div>
         </section>`;
       this.els = {
         tMe: el.querySelector('[data-role="list-tactic-me"]'),
@@ -66,19 +66,13 @@ window.Kakoi = window.Kakoi || {};
         cOpp: el.querySelector('select[data-layer="castle"]'),
         swOpp: el.querySelector('[data-show="opp"]'),
         swThreat: el.querySelector('[data-show="threat"]'),
-        expandSw: { castle: el.querySelector('input[data-expand="castle"]'), tactic: el.querySelector('input[data-expand="tactic"]') },
-        foldNote: { castle: el.querySelector('.mu-folded[data-expand="castle"]'), tactic: el.querySelector('.mu-folded[data-expand="tactic"]') },
+        foldNote: { castle: el.querySelector('.mu-folded[data-note="castle"]'), tactic: el.querySelector('.mu-folded[data-note="tactic"]') },
       };
-      // ×（両立しない・薄い表示の行）の収納状態。畳むのが標準なので既定は true、
-      // 「×を展開」トグル（checked=展開）で false にする。行の相性は update に任せる
-      this.fold = { castle: true, tactic: true };
       this.seg = {
         me: new K.Segmented(el.querySelector('[data-role="seg-me"]'), v => onChoose('me', 'strategy', v)),
         opp: new K.Segmented(el.querySelector('[data-role="seg-opp"]'), v => onChoose('opp', 'strategy', v)),
       };
       el.addEventListener('click', e => {
-        const n = e.target.closest('.mu-folded');
-        if (n) { this._setFold(n.dataset.expand, false); return; }
         const b = e.target.closest('.mu-item');
         if (b) onChoose(b.dataset.side, b.dataset.layer, b.dataset.id);
       });
@@ -101,9 +95,7 @@ window.Kakoi = window.Kakoi || {};
         const sel = e.target.closest('select[data-layer]');
         if (sel) { onChoose('opp', sel.dataset.layer, sel.value); return; }
         const sw = e.target.closest('input[data-show]');
-        if (sw) { onShow(sw.dataset.show, sw.checked); return; }
-        const ex = e.target.closest('input[data-expand]');
-        if (ex) this._setFold(ex.dataset.expand, !ex.checked); // 「×を展開」: ON=展開、OFF=収納
+        if (sw) onShow(sw.dataset.show, sw.checked);
       });
 
       // 一覧の元データ: 戦法は周期表と同じ行（系統ごと・筋の順）、囲いは戦型ごとに系統順
@@ -182,37 +174,23 @@ window.Kakoi = window.Kakoi || {};
         r.mark.hidden = !MARK[j.level];
       }
 
-      // 相性の再判定で × の数が変わるので、収納の案内とトグルの可否をここで同期する
-      // （×が0の層は畳んでも隠れる行が無いので、畳み状態はそのまま保持する）
-      for (const layer of ['castle', 'tactic']) {
-        const n = this._ngCount(layer);
-        this._foldNote(layer, n);
-        this.els.expandSw[layer].disabled = n === 0;
-      }
+      // 相性の再判定で × の数が変わるので、非表示件数の案内をここで同期する
+      for (const layer of ['castle', 'tactic']) this._foldNote(layer, this._ngCount(layer));
 
       this._fillSelect(this.els.tOpp, 'tactic', opp, me, effTacticId(opp));
       this._fillSelect(this.els.cOpp, 'castle', opp, me, effCastleId(opp, me));
       this._status(m);
     }
 
-    /** ×（両立しない）行の収納を開閉する。on=畳む。list に .fold を付けて CSS に任せ、
-        「×を展開」トグルと下端の案内と同期する */
-    _setFold(layer, on) {
-      this.fold[layer] = on;
-      (layer === 'castle' ? this.els.cMe : this.els.tMe).classList.toggle('fold', on);
-      this.els.expandSw[layer].checked = !on;
-      this._foldNote(layer, this._ngCount(layer));
-    }
-
     _ngCount(layer) {
       return this.meRows.reduce((n, r) => n + (r.layer === layer && r.el.dataset.compat === 'ng' ? 1 : 0), 0);
     }
 
-    // 収納中は層の下端に「× n 件を収納」の帯を出す。押すと展開に戻る
+    // ×行は常に非表示なので、層の下端に件数だけを示す（押しても開かない案内）
     _foldNote(layer, n) {
       const el = this.els.foldNote[layer];
-      el.hidden = !(this.fold[layer] && n > 0);
-      el.textContent = `× ${n} 件を収納`;
+      el.hidden = n === 0;
+      el.textContent = `× ${n} 件を非表示`;
     }
 
     // 相手の select: 戦型ごとの optgroup。各選択肢に compat.judge の印を付ける。

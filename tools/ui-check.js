@@ -139,18 +139,20 @@ async function sweepMatchup(page) {
   await sw.click(); await wait(350); r.on = await read();
 
   // × の行を選ぶと両立しない層が自動で差し替わり、トーストが出る（出なければ別の×を試す）。
-  // ×は既定で収納されているので、押す前に両層を「×を展開」で出しておく
-  await page.locator('#matchupRail input[data-expand="castle"]').check();
-  await page.locator('#matchupRail input[data-expand="tactic"]').check(); await wait(200);
+  // ×行は常時非表示なので locator では押せず、要素の click() を直接呼んで選ぶ
   const ngSel = await page.$('#matchupRail .mu-item[data-layer="tactic"][data-compat="ng"]')
     ? '#matchupRail .mu-item[data-layer="tactic"][data-compat="ng"]'
     : '#matchupRail .mu-item[data-compat="ng"]';
   r.ng = await page.$$eval(ngSel, els => els.length);
   r.toast = '';
   for (let i = 0; i < 3 && !r.toast; i++) {
-    const row = page.locator(ngSel).nth(i);
-    if (!await row.count()) break;
-    await row.click(); await wait(300);
+    const clicked = await page.evaluate(({ sel, idx }) => {
+      const rows = document.querySelectorAll(sel);
+      if (!rows[idx]) return false;
+      rows[idx].click(); return true;
+    }, { sel: ngSel, idx: i });
+    if (!clicked) break;
+    await wait(300);
     r.toast = await page.evaluate(() => {
       const t = document.querySelector('.toast.on');
       return t ? t.textContent.trim() : '';
