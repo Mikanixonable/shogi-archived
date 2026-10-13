@@ -72,6 +72,10 @@ body[data-view="tactic"] .overlay .rt-head { animation:skIn .4s var(--ease) var(
 .tc-castle:hover { border-color:var(--accent); background:var(--accent-soft); }
 .tc-castle[aria-pressed="true"] { border-color:var(--accent); background:var(--accent-soft); }
 .tc-castle[aria-pressed="true"] b { color:var(--accent); }
+/* 囲いの詳細「発展」: 発展元・発展先の行。ボタンは .tc-castle を流用 */
+.ln-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.ln-lbl { flex:none; width:3.6em; font-size:11px; color:var(--muted); }
+.ln-row .tc-castle { padding:5px 12px; }
 .tc-go { flex:none; border:1px solid transparent; background:none; padding:0 9px; color:var(--muted);
          font-size:13px; cursor:pointer; transition:color .2s, border-color .2s, background .2s; }
 .tc-go:hover { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }

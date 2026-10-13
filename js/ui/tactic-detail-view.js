@@ -40,6 +40,7 @@ window.Kakoi = window.Kakoi || {};
         this._tags(tactic, family),
         `<p class="desc">${esc(tactic.desc)}</p>`,
         tactic.note ? `<p class="note">${esc(tactic.note)}</p>` : '',
+        family.note ? `<p class="note">${esc(family.piece)}が主役の理由：${esc(family.note)}</p>` : '',
         this._list('長所', tactic.pros, ''),
         this._list('短所', tactic.cons, 'cons'),
         this._route(tactic),

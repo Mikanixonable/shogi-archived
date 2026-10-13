@@ -37,6 +37,7 @@ window.Kakoi = window.Kakoi || {};
         onHover: (squares, tone) => this.board.hover(squares, tone),
         onAttack: attackId => this.store.set({ attackId }),
         onMatchup: id => this._openMatchup(id),
+        onSelect: id => this.selectCastle(id),
       });
     }
 
@@ -137,7 +138,7 @@ window.Kakoi = window.Kakoi || {};
         stage.renderCastle(castle, repo.setupOf(castle));
         detail.render(castle, {
           attackId: state.attackId, sources: repo.sourcesOf(castle),
-          family: repo.familyOf(castle), subtype: repo.subtypeOf(castle),
+          family: repo.familyOf(castle), subtype: repo.subtypeOf(castle), lineage: repo.lineageOf(castle),
         });
       } else if (changed.has('attackId')) {
         detail.setAttack(state.attackId);

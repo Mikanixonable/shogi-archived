@@ -34,8 +34,9 @@ window.Kakoi = window.Kakoi || {};
     /**
      * @param {HTMLElement} el `#detail`（.detail-body）
      * @param {{ onHover:(squares:string[], tone:string)=>void, onAttack:(id:string|null)=>void,
-     *   onMatchup?:(id:string)=>void }} handlers
+     *   onMatchup?:(id:string)=>void, onSelect?:(id:string)=>void }} handlers
      *   onMatchup: 「対局図で開く」でこの囲いを自分側にセットして対局図へ移る
+     *   onSelect: 発展元・発展先の囲いへ移る
      */
     constructor(el, handlers) {
       this.el = el;
@@ -52,12 +53,14 @@ window.Kakoi = window.Kakoi || {};
       el.addEventListener('click', e => {
         const mu = e.target.closest('[data-act="matchup"]');
         if (mu) { if (handlers.onMatchup && this._id) handlers.onMatchup(this._id); return; }
+        const ln = e.target.closest('[data-castle]');
+        if (ln) { if (handlers.onSelect) handlers.onSelect(ln.dataset.castle); return; }
         const b = e.target.closest('.attack');
         if (b) handlers.onAttack(b.getAttribute('aria-pressed') === 'true' ? null : b.dataset.id);
       });
     }
 
-    render(castle, { attackId, sources, family, subtype }) {
+    render(castle, { attackId, sources, family, subtype, lineage }) {
       this._id = castle.id;
       this.el.innerHTML = [
         `<button class="mu-open" data-act="matchup">対局図で開く</button>`,
@@ -67,6 +70,7 @@ window.Kakoi = window.Kakoi || {};
         `<p class="desc">${esc(castle.desc)}</p>`,
         castle.note ? `<p class="note">${esc(castle.note)}</p>` : '',
         this._coreChips(castle),
+        this._lineage(lineage),
         this._list('長所', castle.pros, 'good', ''),
         this._list('短所', castle.cons, 'bad', 'cons'),
         this._attacks(castle, attackId),
@@ -111,6 +115,15 @@ window.Kakoi = window.Kakoi || {};
       const chips = Kakoi.notation.parsePieces(c.core).map(x =>
         `<span class="chip" data-sq="${x.f}${x.r}"><b>${x.p}</b>${label(x.f, x.r)}</span>`).join('');
       return `<div class="sec"><h3>囲いの駒</h3><div class="chips">${chips}</div></div>`;
+    }
+
+    // 発展の前後: どの囲いから駒を動かして組むか / どの囲いへ組み替えられるか
+    _lineage(lineage) {
+      if (!lineage || (!lineage.from && !lineage.to.length)) return '';
+      const btn = c => `<button class="tc-castle" data-castle="${esc(c.id)}"><b>${esc(c.short)}</b></button>`;
+      const row = (lbl, list) => list.length ? `<div class="ln-row"><span class="ln-lbl">${lbl}</span>${list.map(btn).join('')}</div>` : '';
+      return `<div class="sec"><h3>発展<small>押すとその囲いへ</small></h3>` +
+        row('発展元', lineage.from ? [lineage.from] : []) + row('発展先', lineage.to) + '</div>';
     }
 
     _list(title, items, tone, cls) {

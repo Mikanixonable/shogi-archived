@@ -44,7 +44,7 @@ window.Kakoi = window.Kakoi || {};
         html += `<button class="pt-cell" data-id="${esc(t.id)}"${rare} title="${esc(isRare(t) ? `${t.name}（まれ）` : t.name)}" ` +
           `style="grid-row:${n};grid-column:${FILES - hi + 1} / span ${span};--n:${[...t.name].length}"><span>${esc(t.name)}</span></button>`;
       }
-      html += `<span class="pt-tile" title="${esc(family.name)}" style="grid-row:${n};grid-column:${FILES + 1}">${esc(family.piece)}</span>`;
+      html += `<span class="pt-tile" title="${esc(family.note ? `${family.name}\n${family.note}` : family.name)}" style="grid-row:${n};grid-column:${FILES + 1}">${esc(family.piece)}</span>`;
       return html;
     }
   }
