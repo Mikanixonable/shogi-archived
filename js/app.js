@@ -30,9 +30,12 @@
     show: { opp: true, threat: true },
   };
 
+  // 表示設定（ツールバー）の初期値。リセットボタンもここへ戻す
+  const TOOLBAR_DEFAULT = { mode: 'dim', heat: false, skeleton: false, heatScope: 'core' };
+
   const store = new K.Store(
     {
-      view: 'castle', castleId: repo.castles()[0].id, mode: 'dim', heat: false, skeleton: false, heatScope: 'core', attackId: null,
+      view: 'castle', castleId: repo.castles()[0].id, ...TOOLBAR_DEFAULT, attackId: null,
       lastBySide: {}, familyFilter: null, tacticId: repo.tactics()[0]?.id ?? null, clusterFamily: null,
       matchup: MATCHUP_DEFAULT,
     },
@@ -71,8 +74,9 @@
   if (debug) window.__kakoi = { overlay, board, repo, store };
 
   const toolbar = new K.ToolbarView(
-    { mode: $('modeSeg'), heat: $('heat'), skeleton: $('skeleton'), heatScope: $('heatScopeSeg'), heatScopeWrap: $('heatScopeWrap') },
+    { mode: $('modeSeg'), heat: $('heat'), skeleton: $('skeleton'), heatScope: $('heatScopeSeg'), heatScopeWrap: $('heatScopeWrap'), reset: $('resetSettings') },
     patch => store.set(patch),
+    TOOLBAR_DEFAULT,
   );
   const viewSeg = new K.Segmented($('viewSeg'), view => store.set({ view }));
   new K.ThemeToggle($('themeToggle'));

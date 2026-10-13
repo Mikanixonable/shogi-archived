@@ -5,15 +5,17 @@ window.Kakoi = window.Kakoi || {};
 
   class ToolbarView {
     /**
-     * @param {{ mode:HTMLElement, heat:HTMLInputElement, skeleton:HTMLInputElement, heatScope:HTMLElement, heatScopeWrap:HTMLElement }} els
+     * @param {{ mode:HTMLElement, heat:HTMLInputElement, skeleton:HTMLInputElement, heatScope:HTMLElement, heatScopeWrap:HTMLElement, reset?:HTMLButtonElement }} els
      * @param {(patch:object) => void} onChange
+     * @param {object} defaults リセットボタンで戻す表示設定の初期値
      */
-    constructor(els, onChange) {
+    constructor(els, onChange, defaults = {}) {
       this.els = els;
       this.mode = new Kakoi.Segmented(els.mode, v => onChange({ mode: v }));
       this.heatScope = new Kakoi.Segmented(els.heatScope, v => onChange({ heatScope: v }));
       els.heat.addEventListener('change', () => onChange({ heat: els.heat.checked }));
       els.skeleton.addEventListener('change', () => onChange({ skeleton: els.skeleton.checked }));
+      if (els.reset) els.reset.addEventListener('click', () => onChange({ ...defaults }));
     }
 
     render(state) {
