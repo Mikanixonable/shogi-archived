@@ -39,6 +39,13 @@ window.Kakoi = window.Kakoi || {};
       return out;
     }
 
+    /** 保存済みの永続キーをすべて捨てる（リセットして再読み込みする前に呼ぶ） */
+    clearPersisted() {
+      for (const k of this._persist) {
+        try { localStorage.removeItem(`${this._ns}:${k}`); } catch { /* 無視 */ }
+      }
+    }
+
     _save() {
       for (const k of this._persist) {
         try { localStorage.setItem(`${this._ns}:${k}`, JSON.stringify(this.state[k])); } catch { /* 無視 */ }

@@ -8,14 +8,15 @@ window.Kakoi = window.Kakoi || {};
      * @param {{ mode:HTMLElement, heat:HTMLInputElement, skeleton:HTMLInputElement, heatScope:HTMLElement, heatScopeWrap:HTMLElement, reset?:HTMLButtonElement }} els
      * @param {(patch:object) => void} onChange
      * @param {object} defaults リセットボタンで戻す表示設定の初期値
+     * @param {(() => void)|null} onReset リセットボタンの処理。省略時は defaults を onChange へ流すだけ
      */
-    constructor(els, onChange, defaults = {}) {
+    constructor(els, onChange, defaults = {}, onReset = null) {
       this.els = els;
       this.mode = new Kakoi.Segmented(els.mode, v => onChange({ mode: v }));
       this.heatScope = new Kakoi.Segmented(els.heatScope, v => onChange({ heatScope: v }));
       els.heat.addEventListener('change', () => onChange({ heat: els.heat.checked }));
       els.skeleton.addEventListener('change', () => onChange({ skeleton: els.skeleton.checked }));
-      if (els.reset) els.reset.addEventListener('click', () => onChange({ ...defaults }));
+      if (els.reset) els.reset.addEventListener('click', () => (onReset ? onReset() : onChange({ ...defaults })));
     }
 
     render(state) {

@@ -4,14 +4,24 @@
 /* ===== header: 全体の表示設定のみ ===== */
 header { display:flex; align-items:center; gap:14px; padding:10px 20px; border-bottom:1px solid var(--fg); flex-wrap:wrap; }
 .brand { display:flex; align-items:center; gap:12px; }
-/* 朱印の印面（トップへのリンク。ホバーで持ち上げ、押すと沈み、再読込で押し直される） */
+/* 朱印の印面（トップへのリンク。ホバーで揺れて持ち上がり、押すと沈み、再読込で押し直される） */
 .brand .mark { width:26px; height:26px; display:grid; place-items:center; font:700 14px/1 var(--font-d); color:#fbf6ea;
                background:var(--accent); transform:rotate(-3deg); animation:stamp .55s cubic-bezier(.2,.9,.3,1.3) .3s backwards;
                text-decoration:none; cursor:pointer; transition:transform .18s var(--ease); }
-.brand .mark:hover { transform:rotate(0deg) scale(1.08); }
+.brand .mark:hover { transform:rotate(0deg) scale(1.08); animation:mark-hover .5s var(--ease); }
 .brand .mark:active { transform:rotate(-7deg) scale(.82); transition-duration:.06s; }
 @keyframes stamp { from { opacity:0; transform:scale(1.7) rotate(-10deg); }
                    60% { opacity:1; transform:scale(.94) rotate(-3deg); } to { opacity:.95; transform:scale(1) rotate(-3deg); } }
+/* ホバー: 印面が持ち上がるとき、行き過ぎて反対に傾き、揺れて静止位置に収まる */
+@keyframes mark-hover { 0% { transform:rotate(-3deg) scale(1); }
+                        45% { transform:rotate(3deg) scale(1.14); }
+                        75% { transform:rotate(-1.5deg) scale(1.05); }
+                        100% { transform:rotate(0deg) scale(1.08); } }
+/* about: ロゴ横の小さな導線。文字だけのボタン、下に細い罫線 */
+.brand .about { font-size:11px; letter-spacing:.12em; color:var(--muted); background:none; border:0;
+                border-bottom:1px solid var(--line-2); padding:1px 0 2px; margin-left:4px; cursor:pointer;
+                transition:color .2s, border-color .2s; }
+.brand .about:hover { color:var(--fg); border-bottom-color:var(--accent); }
 .brand h1 { margin:0; font:800 20px/1 var(--font-d); letter-spacing:.22em; }
 .brand .sub { font:500 11px/1.6 var(--font-d); color:var(--muted); letter-spacing:.18em; }
 .setting { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
@@ -176,6 +186,18 @@ body[data-view="cluster"] .view-pane.pane-fill[data-view~="cluster"] { display:f
 .sources a { color:var(--fg2); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--line-2); }
 .sources a:hover { color:var(--accent); text-decoration-color:var(--accent); }
 .sources .cv { flex-shrink:0; font:500 10px/1.4 var(--font-n); padding:0 6px; border:1px solid var(--line); color:var(--muted); letter-spacing:.04em; }
+
+/* ===== about モーダル: 和紙の地に罫線だけ。開くときは他の要素と同じく下から静かに立ち上がる ===== */
+.about-dlg { width:min(560px, calc(100vw - 48px)); padding:0; border:1px solid var(--fg);
+             background:var(--bg); color:var(--fg); }
+.about-dlg::backdrop { background:rgba(27,26,23,.35); }
+:root[data-theme="dark"] .about-dlg::backdrop { background:rgba(0,0,0,.55); }
+.about-dlg[open] { animation:swap .45s var(--ease); }
+.about-dlg .about-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+                         padding:14px 20px; border-bottom:1px solid var(--line); }
+.about-dlg h2 { margin:0; font:700 15px/1.5 var(--font-d); letter-spacing:.16em; }
+.about-dlg .about-body { padding:16px 20px 20px; display:flex; flex-direction:column; gap:14px; }
+.about-dlg p { margin:0; font-size:13px; line-height:2; }
 
 /* ===== narrow: 縦1列で「見る→選ぶ→読む」。ヘッダーはナビを2行目に畳み、表示設定は歯車の中へ ===== */
 @media (max-width:980px) {

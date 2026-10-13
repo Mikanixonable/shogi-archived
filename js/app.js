@@ -77,10 +77,13 @@
     { mode: $('modeSeg'), heat: $('heat'), skeleton: $('skeleton'), heatScope: $('heatScopeSeg'), heatScopeWrap: $('heatScopeWrap'), reset: $('resetSettings') },
     patch => store.set(patch),
     TOOLBAR_DEFAULT,
+    // リセット: URL引数（クエリ・ハッシュ）と保存済みの状態を捨て、初期状態で読み込み直す
+    () => { store.clearPersisted(); location.replace(location.pathname); },
   );
   const viewSeg = new K.Segmented($('viewSeg'), view => store.set({ view }));
   new K.ThemeToggle($('themeToggle'));
   new K.ToolsToggle($('toolsToggle'), $('tools'));
+  new K.AboutModal($('aboutOpen'), $('aboutDialog'));
 
   const common = { repo, store, board, overlay };
   const modes = {

@@ -52,7 +52,8 @@ UI チェックは playwright-core で実ブラウザを起動します（Node.j
 
 ## ライセンス
 
-本リポジトリの自作部分は [CC0 1.0 Universal](LICENSE)（パブリックドメイン同等）で公開しています。
+本リポジトリの自作部分は [CC0 1.0 Universal](LICENSE)（パブリックドメイン同等）で公開しています。以下の第三者の著作物・外部サービスを利用しています。
 
-- `js/vendor/three.min.js` は Three.js 作者の著作物で MIT License（ファイル内のヘッダ参照）
-- 囲い・戦法の解説データの出典は `js/data/sources.js` を参照
+- `js/vendor/three.min.js` — Three.js r152、Three.js Authors の著作物で MIT License（[条文全文](js/vendor/three.js.LICENSE.txt)、ファイル内のヘッダ参照）
+- Google Fonts — Shippori Mincho B1・Zen Kaku Gothic New・Cormorant Garamond（SIL Open Font License 1.1）。`index.html` から CDN で読み込んでおり、フォントファイル自体はリポジトリに含みません
+- 囲い・戦法の解説データ — 駒の配置は将棋の形そのもの（事実情報）、解説文は出典の内容を参照して独自に記述したものです。出典一覧は `js/data/sources.js` を参照（アプリ内の「出典」欄にも表示されます）
