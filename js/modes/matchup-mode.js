@@ -19,7 +19,7 @@ window.Kakoi = window.Kakoi || {};
       const st = els.stage;
       this.stageEls = {
         h: st.querySelector('.stage-h'),
-        ttl: st.querySelector('.ttl'), title: st.querySelector('h2'),
+        ttl: st.querySelector('.ttl'), title: st.querySelector('h2'), rdg: st.querySelector('.rdg'),
         context: st.querySelector('.setup'), legend: st.querySelector('.legend'), hand: st.querySelector('.hand'),
       };
       this.rail = new K.MatchupRailView(els.rail, {
@@ -180,7 +180,13 @@ window.Kakoi = window.Kakoi || {};
 
     _paintStage(m, d) {
       const e = this.stageEls;
-      e.title.textContent = '対局図';
+      // 表記は「自分の囲い × 相手の攻撃手法」。相手を隠した一人対局図では自分の囲いだけを表す
+      const meC = this._castleOf(m.me, m.opp);
+      const oppT = m.show.opp ? this._tacticOf(m.opp) : null;
+      e.title.textContent = oppT
+        ? `${meC ? meC.short : '―'} × ${oppT.name}`
+        : meC ? meC.short : '対局図';
+      e.rdg.textContent = '';
       e.context.textContent = e.context.title = d.threat
         ? `${d.threat.label} ／ ${K.STRATEGIES[m.me.strategy].label} × ${K.STRATEGIES[m.opp.strategy].label}`
         : `${K.STRATEGIES[m.me.strategy].label}（相手は非表示）`;
