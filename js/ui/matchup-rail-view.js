@@ -1,6 +1,6 @@
 // 対局図の左パネル: 「自分」の3層（戦略・囲い・戦法）を相性バッジつきの一覧で選び、
 // 「相手」の3層をコンパクトな選択肢で選ぶ。バッジは compat.judge の best/ok/ng（計画書 §6）。
-// ×の行（薄い表示）は見出しのトグルで縦にたたんで収納できる
+// ×の行（薄い表示）は畳んで収納するのが標準。見出しの「×を展開」トグルで開く
 window.Kakoi = window.Kakoi || {};
 (() => {
   'use strict';
@@ -36,12 +36,12 @@ window.Kakoi = window.Kakoi || {};
           <div class="seg wide" data-role="seg-me">
             <button data-value="ibisha">居飛車</button><button data-value="furibisha">振り飛車</button>
           </div>
-          <h4 class="mu-sub">囲い<label class="switch"><input type="checkbox" data-fold="castle"> ×を収納</label></h4>
-          <div class="mu-list" data-role="list-castle-me"></div>
-          <button class="mu-folded" type="button" data-fold="castle" hidden></button>
-          <h4 class="mu-sub">戦法<label class="switch"><input type="checkbox" data-fold="tactic"> ×を収納</label></h4>
-          <div class="mu-list" data-role="list-tactic-me"></div>
-          <button class="mu-folded" type="button" data-fold="tactic" hidden></button>
+          <h4 class="mu-sub">囲い<label class="switch"><input type="checkbox" data-expand="castle"> ×を展開</label></h4>
+          <div class="mu-list fold" data-role="list-castle-me"></div>
+          <button class="mu-folded" type="button" data-expand="castle" hidden></button>
+          <h4 class="mu-sub">戦法<label class="switch"><input type="checkbox" data-expand="tactic"> ×を展開</label></h4>
+          <div class="mu-list fold" data-role="list-tactic-me"></div>
+          <button class="mu-folded" type="button" data-expand="tactic" hidden></button>
         </section>
         <section class="mu-side" data-side="opp">
           <h3 class="mu-h">相手<small>後手</small>
@@ -66,18 +66,19 @@ window.Kakoi = window.Kakoi || {};
         cOpp: el.querySelector('select[data-layer="castle"]'),
         swOpp: el.querySelector('[data-show="opp"]'),
         swThreat: el.querySelector('[data-show="threat"]'),
-        foldSw: { castle: el.querySelector('input[data-fold="castle"]'), tactic: el.querySelector('input[data-fold="tactic"]') },
-        foldNote: { castle: el.querySelector('.mu-folded[data-fold="castle"]'), tactic: el.querySelector('.mu-folded[data-fold="tactic"]') },
+        expandSw: { castle: el.querySelector('input[data-expand="castle"]'), tactic: el.querySelector('input[data-expand="tactic"]') },
+        foldNote: { castle: el.querySelector('.mu-folded[data-expand="castle"]'), tactic: el.querySelector('.mu-folded[data-expand="tactic"]') },
       };
-      // ×（両立しない・薄い表示の行）の収納状態。層ごとの開閉だけを持ち、行の相性は update に任せる
-      this.fold = { castle: false, tactic: false };
+      // ×（両立しない・薄い表示の行）の収納状態。畳むのが標準なので既定は true、
+      // 「×を展開」トグル（checked=展開）で false にする。行の相性は update に任せる
+      this.fold = { castle: true, tactic: true };
       this.seg = {
         me: new K.Segmented(el.querySelector('[data-role="seg-me"]'), v => onChoose('me', 'strategy', v)),
         opp: new K.Segmented(el.querySelector('[data-role="seg-opp"]'), v => onChoose('opp', 'strategy', v)),
       };
       el.addEventListener('click', e => {
         const n = e.target.closest('.mu-folded');
-        if (n) { this._setFold(n.dataset.fold, false); return; }
+        if (n) { this._setFold(n.dataset.expand, false); return; }
         const b = e.target.closest('.mu-item');
         if (b) onChoose(b.dataset.side, b.dataset.layer, b.dataset.id);
       });
@@ -101,8 +102,8 @@ window.Kakoi = window.Kakoi || {};
         if (sel) { onChoose('opp', sel.dataset.layer, sel.value); return; }
         const sw = e.target.closest('input[data-show]');
         if (sw) { onShow(sw.dataset.show, sw.checked); return; }
-        const fd = e.target.closest('input[data-fold]');
-        if (fd) this._setFold(fd.dataset.fold, fd.checked);
+        const ex = e.target.closest('input[data-expand]');
+        if (ex) this._setFold(ex.dataset.expand, !ex.checked); // 「×を展開」: ON=展開、OFF=収納
       });
 
       // 一覧の元データ: 戦法は周期表と同じ行（系統ごと・筋の順）、囲いは戦型ごとに系統順
@@ -181,13 +182,12 @@ window.Kakoi = window.Kakoi || {};
         r.mark.hidden = !MARK[j.level];
       }
 
-      // 相性の再判定で × の数が変わるので、収納の案内とトグルの可否をここで同期する。
-      // ×が無くなった層は開いた状態に戻す（畳んだまま不可視の状態を残さない）
+      // 相性の再判定で × の数が変わるので、収納の案内とトグルの可否をここで同期する
+      // （×が0の層は畳んでも隠れる行が無いので、畳み状態はそのまま保持する）
       for (const layer of ['castle', 'tactic']) {
         const n = this._ngCount(layer);
-        if (n === 0 && this.fold[layer]) this._setFold(layer, false);
         this._foldNote(layer, n);
-        this.els.foldSw[layer].disabled = n === 0;
+        this.els.expandSw[layer].disabled = n === 0;
       }
 
       this._fillSelect(this.els.tOpp, 'tactic', opp, me, effTacticId(opp));
@@ -195,11 +195,12 @@ window.Kakoi = window.Kakoi || {};
       this._status(m);
     }
 
-    /** ×（両立しない）行の収納を開閉する。list に .fold を付けて CSS に任せ、下端の案内と同期する */
+    /** ×（両立しない）行の収納を開閉する。on=畳む。list に .fold を付けて CSS に任せ、
+        「×を展開」トグルと下端の案内と同期する */
     _setFold(layer, on) {
       this.fold[layer] = on;
       (layer === 'castle' ? this.els.cMe : this.els.tMe).classList.toggle('fold', on);
-      this.els.foldSw[layer].checked = on;
+      this.els.expandSw[layer].checked = !on;
       this._foldNote(layer, this._ngCount(layer));
     }
 
