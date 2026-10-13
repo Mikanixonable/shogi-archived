@@ -29,7 +29,7 @@
 
 | パス | 内容 |
 | --- | --- |
-| `castles.html` | エントリページ（`index.html` は GitHub Pages 用のリダイレクト） |
+| `index.html` | エントリページ |
 | `js/manifest.js` | スクリプト読込順の一元管理 |
 | `js/data/` | 囲い・戦法・分類・出典のデータ |
 | `js/core/` | 盤面モデル・利き計算・検証などのロジック |

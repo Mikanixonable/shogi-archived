@@ -27,7 +27,7 @@ const warn = m => { warns++; console.log(`WARN ${m}`); };
 function serve() {
   const srv = http.createServer((req, res) => {
     const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    const file = path.join(ROOT, p === '/' ? 'castles.html' : p);
+    const file = path.join(ROOT, p === '/' ? 'index.html' : p);
     if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
     fs.readFile(file, (e, data) => {
       if (e) { res.writeHead(404).end('not found'); return; }
@@ -192,7 +192,7 @@ async function main() {
   const browser = await launch();
   const errs = [];
   try {
-    const base = `http://127.0.0.1:${port}/castles.html`;
+    const base = `http://127.0.0.1:${port}/index.html`;
     if (!SHOTS_ONLY) {
       // ---- 巡回（1440px ライト） ----
       const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
