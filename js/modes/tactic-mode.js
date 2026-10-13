@@ -145,7 +145,8 @@ window.Kakoi = window.Kakoi || {};
         });
         this.stage.setHand(position.hand);
         overlay.skeleton(null);
-        overlay.route(tactic.route);
+        // 飛車が主役の戦法では矢印を引かない（銀など、歩みのある主役の筋道だけを示す）
+        overlay.route(tactic.lead && tactic.lead.piece === '飛' ? null : tactic.route);
       } else if (changed.has('mode')) {
         board.setMode(state.mode);
       }

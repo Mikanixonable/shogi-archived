@@ -33,7 +33,9 @@ window.Kakoi = window.Kakoi || {};
       els.context.textContent = els.context.title = `${family.name}${tactic.context ? ` ／ ${tactic.context}` : ''}`;
       const guess = /推定/.test(tactic.note || '') ? '（途中は推定）' : '';
       const who = castle ? '朱色は主役の駒と囲いの駒' : '朱色の駒が主役';
-      els.legend.innerHTML = `<i></i>${who}。破線の矢印は主役の駒の動き${guess}`;
+      // 飛車が主役の戦法では矢印を引かないので、凡例にも出さない
+      const arrow = tactic.lead && tactic.lead.piece === '飛' ? '' : `。破線の矢印は主役の駒の動き${guess}`;
+      els.legend.innerHTML = `<i></i>${who}${arrow}`;
       els.ttl.classList.remove('swap'); void els.ttl.offsetWidth; els.ttl.classList.add('swap');
     }
 

@@ -151,17 +151,22 @@ window.Kakoi = window.Kakoi || {};
       const meT = this._tacticOf(m.me);
       const oppT = d.oppPos ? this._tacticOf(m.opp) : null;
       const routes = [
-        meT && meT.route && meT.route.length > 1 ? { squares: meT.route, tone: 'ink' } : null,
-        oppT && oppT.route && oppT.route.length > 1 ? { squares: oppT.route.map(mirrorSq), tone: 'bad' } : null,
+        MatchupMode.hasArrow(meT) ? { squares: meT.route, tone: 'ink' } : null,
+        MatchupMode.hasArrow(oppT) ? { squares: oppT.route.map(mirrorSq), tone: 'bad' } : null,
       ].filter(Boolean);
       if (ov.routes) ov.routes(routes.length ? routes : null);
-      else ov.route(meT && meT.route && meT.route.length > 1 ? meT.route : null, { tone: 'ink' });
+      else ov.route(MatchupMode.hasArrow(meT) ? meT.route : null, { tone: 'ink' });
       if (ov.contacts) {
         ov.contacts(d.merged.contacts.length
           ? d.merged.contacts.map(c => ({ sq: c.sq, kind: c.kind }))
           : null);
       }
       this._skeleton(state, m, d);
+    }
+
+    /** 主役が飛車ではない・筋道のある戦法だけ矢印を引く（飛車の矢印は出さない） */
+    static hasArrow(t) {
+      return !!(t && t.route && t.route.length > 1 && t.lead && t.lead.piece !== '飛');
     }
 
     _skeleton(state, m, d) {
@@ -179,9 +184,12 @@ window.Kakoi = window.Kakoi || {};
       e.context.textContent = e.context.title = d.threat
         ? `${d.threat.label} ／ ${K.STRATEGIES[m.me.strategy].label} × ${K.STRATEGIES[m.opp.strategy].label}`
         : `${K.STRATEGIES[m.me.strategy].label}（相手は非表示）`;
-      e.legend.innerHTML = '<i></i>' + (d.threat
-        ? '朱の帯は相手の攻め筋。破線は主役の駒の動き（墨＝自分・朱＝相手）。枠のマスは両軍の接触'
-        : '破線は主役の駒の動き');
+      // 凡例は盤に出ている要素だけを説明する（飛車の戦法では矢印を引かないので言及もしない）
+      const arrow = MatchupMode.hasArrow(this._tacticOf(m.me)) || MatchupMode.hasArrow(m.show.opp ? this._tacticOf(m.opp) : null);
+      const txt = d.threat
+        ? `朱の帯は相手の攻め筋。${arrow ? '破線は主役の駒の動き（墨＝自分・朱＝相手）。' : ''}枠のマスは両軍の接触`
+        : arrow ? '破線は主役の駒の動き' : '';
+      e.legend.innerHTML = txt ? '<i></i>' + txt : '';
       // 持ち駒は両軍まとめて盤に置けない分。先後を分けて併記する
       const meH = d.mePos.position.hand || [];
       const oppH = d.oppPos ? d.oppPos.position.hand || [] : [];
