@@ -1,0 +1,96 @@
+/* 盤と駒: 本盤・マスの重ね表示（利き・ハイライト）・先手後手の駒・ミニ盤
+   「墨と余白」: 板はフラットな榧の一枚、駒は和紙色の駒面に墨の輪郭線と墨字 */
+
+.boardarea { container-type:size; display:flex; align-items:center; justify-content:center; min-height:0; }
+.boardwrap { display:grid; grid-template-columns:minmax(0,1fr) 22px; grid-template-rows:22px auto;
+             --ptable-h:0px; width:min(100cqw, calc((100cqh - 22px - var(--ptable-h)) * 9 / 9.6 + 22px)); }
+.flabels { display:grid; grid-template-columns:repeat(9,1fr); font:500 11px var(--font-d); color:var(--muted); text-align:center; align-items:end; padding-bottom:4px; }
+.rlabels { display:grid; grid-template-rows:repeat(9,1fr); font:11px var(--font-d); color:var(--muted); align-items:center; justify-items:center; }
+
+.board { position:relative; aspect-ratio:9/9.6; overflow:hidden;
+         background:linear-gradient(170deg,var(--wood-1),var(--wood-2));
+         box-shadow:0 0 0 1px var(--wood-line); }
+
+.squares { position:absolute; inset:0; display:grid; grid-template-columns:repeat(9,1fr); grid-template-rows:repeat(9,1fr); }
+
+.sq { position:relative; border-right:1px solid var(--wood-line); border-bottom:1px solid var(--wood-line); display:flex; align-items:center; justify-content:center; container-type:size; }
+.sq:nth-child(9n) { border-right:0; }
+.sq:nth-child(n+73) { border-bottom:0; }
+
+/* 利きの数 */
+.sq .h { position:absolute; inset:0; background:rgba(var(--heat), calc(var(--h) * .16)); animation:fade .3s var(--ease); }
+.sq .h b { position:absolute; right:3px; top:1px; z-index:2; font-size:max(10px, 24cqh); font-weight:700; color:rgb(var(--heat)); line-height:1.2; text-shadow:0 0 3px rgba(255,245,225,.9); }
+@keyframes fade { from { opacity:0; } }
+
+/* 解説・攻め筋からのハイライト */
+.sq[data-tone]::before { content:""; position:absolute; inset:2px; z-index:2; pointer-events:none; animation:pulse 1.6s var(--ease) infinite; }
+.sq[data-tone="focus"]::before { box-shadow:inset 0 0 0 3px var(--accent); }
+.sq[data-tone="good"]::before  { box-shadow:inset 0 0 0 3px var(--good); background:color-mix(in srgb, var(--good) 18%, transparent); }
+.sq[data-tone="bad"]::before   { box-shadow:inset 0 0 0 3px var(--bad);  background:color-mix(in srgb, var(--bad) 18%, transparent); }
+@keyframes pulse { 50% { opacity:.55; } }
+
+/* 立体駒レイヤ（既定）: マス DOM と重ね表示 SVG の間に挟む盤全面の canvas。盤は表示専用なので操作は通さない */
+.pieces3d { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+
+/* 駒: 墨の輪郭線（i）に和紙色の駒面（i::before）を重ね、字は墨書き。飾りはなし（?flat / WebGL 非対応時の DOM レイヤ用） */
+.pc { width:84%; height:90%; position:relative; z-index:1; filter:drop-shadow(0 1px 0 rgba(60,40,10,.25)); transition:opacity .3s var(--ease); }
+.pc i { position:absolute; inset:0; clip-path:polygon(50% 0, 86% 14%, 100% 100%, 0 100%, 14% 14%);
+        background:var(--piece-edge); font-style:normal; }
+.pc i::before { content:""; position:absolute; inset:1px; clip-path:polygon(50% 0, 86% 14%, 100% 100%, 0 100%, 14% 14%);
+        background:var(--piece-1); }
+.pc i span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding-top:12%; font:700 min(58cqh,60cqw)/1 var(--font-d); color:var(--ink); }
+.pc.core i span { color:var(--core); }
+.pc.off { opacity:.28; filter:none; }
+.pc.hidden { opacity:0; }
+.pc.gote { transform:rotate(180deg); animation:goteIn .45s var(--ease) backwards; }
+.pc.gote i span { color:var(--gote-ink); }
+@keyframes goteIn { from { opacity:0; transform:rotate(180deg) translateY(30%); } }
+/* 再描画で居続けた駒・消えゆく駒の複製は、入場アニメを鳴らさない */
+.pc.no-enter { animation:none; }
+
+/* ミニ盤（左のカード） */
+.mini-bg { fill:url(#wood); }
+.mini-ln { stroke:var(--wood-line); stroke-width:.35; }
+.mini-pc { font:700 8.4px var(--font-d); fill:var(--ink); text-anchor:middle; dominant-baseline:central; }
+.mini-pc.core { fill:var(--core); }
+.mini-pc.off { opacity:.28; }
+
+/* 盤の重ね表示（骨格線・筋道の矢印）。駒の上 */
+.overlay { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; overflow:visible; }
+.overlay .sk, .overlay .rt { vector-effect:non-scaling-stroke; }
+.overlay .sk-line { stroke:var(--accent-2); stroke-width:2.5px; stroke-linecap:round; opacity:.85; }
+.overlay .sk-dot  { fill:var(--accent-2); opacity:.85; }
+.overlay .sk-ring { fill:none; stroke:var(--accent-2); stroke-width:2.5px; opacity:.85; }
+.overlay .sk-g { animation:skIn .4s var(--ease) .45s backwards; }
+@keyframes skIn { from { opacity:0; } }
+.overlay .rt-line { fill:none; stroke:var(--rt,var(--accent)); stroke-width:2.5px; stroke-dasharray:7 5; stroke-linecap:round; stroke-linejoin:round; opacity:.95; }
+.overlay .rt-line.rt-good { stroke:var(--good); }
+.overlay .rt-line.rt-bad  { stroke:var(--bad); }
+.overlay .rt-line.rt-ink  { stroke:var(--fg); }
+.overlay .rt-head { fill:var(--rt,var(--accent)); }
+.overlay .rt-hg { fill:var(--good); }
+.overlay .rt-hb { fill:var(--bad); }
+.overlay .rt-hi { fill:var(--fg); }
+.overlay .rt-g { animation:skIn .3s var(--ease) backwards; }
+
+/* 脅威の帯（対局図: 相手の飛車の筋・主役の経路の終点の筋に薄い朱）。
+   .squares より前の兄弟なので、帯はマス・駒・ヒートの下、盤面の木目の上に収まる */
+.ov-threats { position:absolute; inset:0; z-index:0; pointer-events:none; }
+.ov-threat { position:absolute; top:1px; bottom:1px; width:calc(100% / 9); border-radius:4px;
+             background:color-mix(in srgb, var(--bad) 12%, transparent);
+             animation:skIn .35s var(--ease) backwards; }
+
+/* 接触の印（対局図: 両軍の駒がぶつかったマスの ◆。中立は墨、両立しない重なりは朱） */
+.ov-contacts { position:absolute; inset:0; z-index:3; pointer-events:none; }
+.ov-contact { position:absolute; width:3.2%; aspect-ratio:1; transform:translate(-50%,-50%) rotate(45deg);
+              background:var(--ink); opacity:.75; border-radius:1px;
+              box-shadow:0 0 0 2px color-mix(in srgb, var(--piece-1) 85%, transparent);
+              animation:skIn .3s var(--ease) backwards; }
+.ov-contact[data-kind="ng"] { background:var(--bad); opacity:.9; }
+
+/* 狭い画面: 高さで収める必要がない（ページ全体がスクロールする）ので、盤は幅いっぱいに。
+   高さ方向の container 指定を外して boardarea が内容の高さを取れるようにする（cqw は残る） */
+@media (max-width:980px) {
+  .boardarea { container-type:inline-size; }
+  .boardwrap { width:100cqw; }
+}
